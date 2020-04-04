@@ -1,9 +1,7 @@
 # Setting up different prediction models for monitoring of available beds
 
-## To fake some data:
+## Data
+the data is simulated in python
 
-Move to the synthea folder:
-cd ~/Desktop/hackathon/synthea 
-
-# sample patient data (1234 is the seed and 100 is the size of the sample)
-./run_synthea -s 1234 -p 100 
+## Modeling
+some easy models to predict the length-of-stay of a patient in an ICU bed are computed in R
