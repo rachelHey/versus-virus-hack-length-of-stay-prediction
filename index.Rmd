@@ -18,38 +18,38 @@ library(MASS)
 ```
 
 
-_Note: for now I used 100% random information of length-of-stay_
-
 # Background
-The <span style="color:#46c3a4">_**GreenBed**_</span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients inbetween cities or even cantons.
+The <span style="color:#46c3a4">_**GreenBed**_</span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients in between cities or even cantons.
 
 # Data 
-The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the app will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitiv patient-data. The data collected by the platform will be the following:
+The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the platform will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitive patient-data. The data collected by the platform will be the following:
 
 - unique identifier of the bed (`ID_BED`).
 - unique identifier of the hospital (`ID_HOSPITAL`)
 - date of admission of the patient (`ADMISSION_DATE`)
-- gender of the patent (`GENDER`)
-- age of the patient (`AGE`) (_can be changed to birthdate instead, however due to data-privacy issue we prefere not to_)
+- date of discharge of the patient (`DISCHARGE_DATE`)
+- length-of-stay of the patient (`LENGTH_OF_STAY`)
+- gender of the patient (`GENDER`)
+- age of the patient (`AGE`) (_can be changed to birth date instead, however due to data-privacy issue we prefer not to_)
+- co-morbidities or preconditions of the patient (`COMORB`). This can be a text input, with listed co-morbidities separated by commas, so that the model can either use a binary variable for presence of preconditions (`PRESENCE_COMORB`) or even the number of different preconditions (`NB_COMORB`). 
+- some Covid-19 related severity score as for example the [Brescia-COVID Respiratory Severity Scale](https://www.mdcalc.com/brescia-covid-respiratory-severity-scale-bcrss-algorithm)
+- Covid-19 related symptoms or simply again the number of symptoms (`NB_SYMPTOMS`)
 
-```{r import-and-clean-up-data}
-patients <- read.csv(file = "data/ICU_SWITZERLAND_MOCK_V1.csv")
+```{r import-and-clean-up-data, warning= FALSE, message = FALSE}
+patients <- readxl::read_xlsx(path = "data/TRAINING_DURATION_OF_STAY.xlsx") %>% 
+  rename(PATIENT_ID = "...1",
+         LENGTH_OF_STAY = "DUATION OF STAY",
+         NB_COMORB = "# of pre_conditions",
+         NB_SYMPTOMS = "# of symptoms",
+         AGE = Age, 
+         GENDER = Gender)
 
 n_sample <- nrow(patients)
 
-set.seed(123)
-# let's assume a patient is in an ICU bed an average of 7 days
-avg_nb_days <- 7
-randomly_allocate_a_length_of_stay <- rpois(n = n_sample,
-                                            lambda = avg_nb_days)
-
-patients <- cbind(randomly_allocate_a_length_of_stay, 
-                  patients)
+# set.seed(123)
+# patients <- cbind(randomly_allocate_a_length_of_stay, 
+#                   patients)
 ```
-
-## Mock data structure explained
-
-Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
 
 ## Predictors
 
@@ -58,6 +58,11 @@ After a literature review the following potential predictors were retrieved:
 - tba 
 - tba
 
+
+## Mock data structure explained
+
+Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
+XXXXX
 
 # Training and Testing
 
@@ -75,14 +80,13 @@ n_test <- nrow(test_patients)
 
 
 # Description of potential models
-Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at ($e.g$ machine learning). For the time-being and for a first prototype simple parametric regression models should be used.
+Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at ($e.g$ machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient
 
-## Simple poisson regression model 
+## Simple Poisson regression model 
 Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem.
 ```{r poisson-model-training, echo = TRUE}
 poisson_regression <- 
-  glm(randomly_allocate_a_length_of_stay ~ Gender + Age + Ort + 
-           zertifizierte..Betten,
+  glm(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
       family = "poisson",data = train_patients)
 ```
 
@@ -92,14 +96,16 @@ An alternative to poisson regression are negative-binomial models.
 
 ```{r negbin-model-training, echo = TRUE, warning=FALSE}
 negbin_regression <- 
-  glm.nb(randomly_allocate_a_length_of_stay ~ Gender + Age + Ort + 
-           zertifizierte..Betten,
-          data = train_patients)
+  glm.nb(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
+         data = train_patients)
 ```
 
 ## Tree-based solutions
 
 More non-parametric models should be looked at, once more data has been collected.
+
+## Further modelling strategies
+An ad-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated _time-to-event models_ after the data on the end-state of the patients at the time of 'leaving' the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease. 
 
 # Model performance and variable selection on the mock-data
 
@@ -111,7 +117,7 @@ Let's see how well that first poisson model performs:
 ```{r poisson-model-testing, echo = TRUE}
 predict_los <- predict(poisson_regression, newdata = test_patients,
                        type = "response")
-observed_los <- test_patients$randomly_allocate_a_length_of_stay
+observed_los <- test_patients$LENGTH_OF_STAY
 
 RMSE <- sqrt(sum((observed_los - predict_los)**2)/n_test)
 RMSE

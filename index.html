@@ -269,6 +269,9 @@ font-size: 2.8em;
 color:#46c3a4;
 font-family:'Helvetica'
 }
+a:link {
+color:#666666;
+}
 h2 {
 font-size: 2em;
 font-style: italic;
@@ -276,14 +279,14 @@ color:#46c3a4;
 font-family:'Helvetica'
 }
 p {
-font-size: 1.5em;
-line-height: 1.2em;
+font-size: 1.3em;
+line-height: 1.5em;
 color: #333;
 font-family:'Helvetica'
 }
 li {
-font-size: 1.3em;
-line-height: 1.2em;
+font-size: 1.2em;
+line-height: 1.3em;
 color: #333;
 font-family:'Helvetica'
 }
@@ -409,25 +412,25 @@ summary {
 </div>
 
 
-<p><em>Note: for now I used 100% random information of length-of-stay</em></p>
 <div id="background" class="section level1">
 <h1>Background</h1>
-<p>The <span style="color:#46c3a4"><em><strong>GreenBed</strong></em></span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients inbetween cities or even cantons.</p>
+<p>The <span style="color:#46c3a4"><em><strong>GreenBed</strong></em></span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients in between cities or even cantons.</p>
 </div>
 <div id="data" class="section level1">
 <h1>Data</h1>
-<p>The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the app will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitiv patient-data. The data collected by the platform will be the following:</p>
+<p>The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the platform will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitive patient-data. The data collected by the platform will be the following:</p>
 <ul>
 <li>unique identifier of the bed (<code>ID_BED</code>).</li>
 <li>unique identifier of the hospital (<code>ID_HOSPITAL</code>)</li>
 <li>date of admission of the patient (<code>ADMISSION_DATE</code>)</li>
-<li>gender of the patent (<code>GENDER</code>)</li>
-<li>age of the patient (<code>AGE</code>) (<em>can be changed to birthdate instead, however due to data-privacy issue we prefere not to</em>)</li>
+<li>date of discharge of the patient (<code>DISCHARGE_DATE</code>)</li>
+<li>length-of-stay of the patient (<code>LENGTH_OF_STAY</code>)</li>
+<li>gender of the patient (<code>GENDER</code>)</li>
+<li>age of the patient (<code>AGE</code>) (<em>can be changed to birth date instead, however due to data-privacy issue we prefer not to</em>)</li>
+<li>co-morbidities or preconditions of the patient (<code>COMORB</code>). This can be a text input, with listed co-morbidities separated by commas, so that the model can either use a binary variable for presence of preconditions (<code>PRESENCE_COMORB</code>) or even the number of different preconditions (<code>NB_COMORB</code>).</li>
+<li>some Covid-19 related severity score as for example the <a href="https://www.mdcalc.com/brescia-covid-respiratory-severity-scale-bcrss-algorithm">Brescia-COVID Respiratory Severity Scale</a></li>
+<li>Covid-19 related symptoms or simply again the number of symptoms (<code>NB_SYMPTOMS</code>)</li>
 </ul>
-<div id="mock-data-structure-explained" class="section level2">
-<h2>Mock data structure explained</h2>
-<p>Python was used to build a synthetic data set. The sample size is 9’773.</p>
-</div>
 <div id="predictors" class="section level2">
 <h2>Predictors</h2>
 <p>After a literature review the following potential predictors were retrieved:</p>
@@ -435,6 +438,10 @@ summary {
 <li>tba</li>
 <li>tba</li>
 </ul>
+</div>
+<div id="mock-data-structure-explained" class="section level2">
+<h2>Mock data structure explained</h2>
+<p>Python was used to build a synthetic data set. The sample size is 9’773. XXXXX</p>
 </div>
 </div>
 <div id="training-and-testing" class="section level1">
@@ -450,26 +457,28 @@ n_test &lt;- nrow(test_patients)</code></pre>
 </div>
 <div id="description-of-potential-models" class="section level1">
 <h1>Description of potential models</h1>
-<p>Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at (<span class="math inline">\(e.g\)</span> machine learning). For the time-being and for a first prototype simple parametric regression models should be used.</p>
+<p>Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at (<span class="math inline">\(e.g\)</span> machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient</p>
 <div id="simple-poisson-regression-model" class="section level2">
-<h2>Simple poisson regression model</h2>
+<h2>Simple Poisson regression model</h2>
 <p>Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem.</p>
 <pre class="r"><code>poisson_regression &lt;- 
-  glm(randomly_allocate_a_length_of_stay ~ Gender + Age + Ort + 
-           zertifizierte..Betten,
+  glm(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
       family = &quot;poisson&quot;,data = train_patients)</code></pre>
 </div>
 <div id="negative-binomial-regression-model" class="section level2">
 <h2>Negative-binomial regression model</h2>
 <p>An alternative to poisson regression are negative-binomial models.</p>
 <pre class="r"><code>negbin_regression &lt;- 
-  glm.nb(randomly_allocate_a_length_of_stay ~ Gender + Age + Ort + 
-           zertifizierte..Betten,
-          data = train_patients)</code></pre>
+  glm.nb(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
+         data = train_patients)</code></pre>
 </div>
 <div id="tree-based-solutions" class="section level2">
 <h2>Tree-based solutions</h2>
 <p>More non-parametric models should be looked at, once more data has been collected.</p>
+</div>
+<div id="further-modelling-strategies" class="section level2">
+<h2>Further modelling strategies</h2>
+<p>An ad-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated <em>time-to-event models</em> after the data on the end-state of the patients at the time of ‘leaving’ the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease.</p>
 </div>
 </div>
 <div id="model-performance-and-variable-selection-on-the-mock-data" class="section level1">
@@ -479,11 +488,11 @@ n_test &lt;- nrow(test_patients)</code></pre>
 <p>Let’s see how well that first poisson model performs:</p>
 <pre class="r"><code>predict_los &lt;- predict(poisson_regression, newdata = test_patients,
                        type = &quot;response&quot;)
-observed_los &lt;- test_patients$randomly_allocate_a_length_of_stay
+observed_los &lt;- test_patients$LENGTH_OF_STAY
 
 RMSE &lt;- sqrt(sum((observed_los - predict_los)**2)/n_test)
 RMSE</code></pre>
-<pre><code>## [1] 2.614144</code></pre>
+<pre><code>## [1] 2.543795</code></pre>
 </div>
 <div id="data-privacy-issues-to-consider" class="section level1">
 <h1>Data-privacy issues to consider</h1>

@@ -15,6 +15,9 @@ h1 {
     font-family:'Helvetica'
 }
 
+a:link {
+    color:#666666;
+}
 h2 {
     font-size: 2em;
     font-style: italic;
@@ -22,15 +25,15 @@ h2 {
     font-family:'Helvetica'
 }
 p {
-    font-size: 1.5em;
-    line-height: 1.2em;
+    font-size: 1.3em;
+    line-height: 1.5em;
     color: #333;
     font-family:'Helvetica'
 }
 
 li {
-    font-size: 1.3em;
-    line-height: 1.2em;
+    font-size: 1.2em;
+    line-height: 1.3em;
     color: #333;
     font-family:'Helvetica'
 }
