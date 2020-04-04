@@ -1,7 +1,8 @@
 ---
-title: "Prediction of length-of-stay in an ICU bed"
+title: "**Prediction of length-of-stay in an ICU bed**"
 output: 
-  html_document
+  html_document:
+    css: css/main.css
 ---
 
 ```{r setup, include=FALSE}
@@ -20,9 +21,17 @@ library(MASS)
 _Note: for now I used 100% random information of length-of-stay_
 
 # Background
-At admission of a patient to the ICU (an ICU bed) we want to predict how long they will stay in the bed. The outcome we will look is therefore length-of-stay in an ICU bed. We want to base our predictions on some baseline characteristics of the patient (at admission), hospital-level-data, and bed-level-data.
+The <span style="color:#46c3a4">_**GreenBed**_</span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients inbetween cities or even cantons.
 
 # Data 
+The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the app will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitiv patient-data. The data collected by the platform will be the following:
+
+- unique identifier of the bed (`ID_BED`).
+- unique identifier of the hospital (`ID_HOSPITAL`)
+- date of admission of the patient (`ADMISSION_DATE`)
+- gender of the patent (`GENDER`)
+- age of the patient (`AGE`) (_can be changed to birthdate instead, however due to data-privacy issue we prefere not to_)
+
 ```{r import-and-clean-up-data}
 patients <- read.csv(file = "data/ICU_SWITZERLAND_MOCK_V1.csv")
 
@@ -40,7 +49,7 @@ patients <- cbind(randomly_allocate_a_length_of_stay,
 
 ## Mock data structure explained
 
-Python was used to build a synthetic data set. The sample size is `r n_sample`. 
+Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
 
 ## Predictors
 
@@ -108,20 +117,9 @@ RMSE <- sqrt(sum((observed_los - predict_los)**2)/n_test)
 RMSE
 ```
 
-<!-- Pimp model by trying out different variable combinations -->
-<!-- ```{r} -->
-<!-- poisson_regression_only_gender_age <-  -->
-<!--   glm(randomly_allocate_a_length_of_stay ~ Gender + Age, -->
-<!--       family = "poisson",data = train_patients) -->
-<!-- ``` -->
 
-<!-- ```{r different-model-testing, echo = TRUE, include = FALSE} -->
-<!-- predict_los <- predict(poisson_regression_only_gender_age, -->
-<!--                        newdata = test_patients,  -->
-<!--                        type = "response") -->
-<!-- observed_los <- test_patients$randomly_allocate_a_length_of_stay -->
+# Data-privacy issues to consider
 
-<!-- RMSE <- sqrt(sum((observed_los - negbin_predict_los)**2)/n_test) -->
-<!-- RMSE -->
-<!-- ``` -->
-<!-- Since the  -->
+To ensure the data being pseudo-anonymised, meaning making it impossible, or very hard to identify patients, we can consider the following further steps:
+
+- Age-groups instead of exact age (<18, [18-29], [30-49], [50-64], [65-74], 75+)
