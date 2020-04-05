@@ -128,14 +128,32 @@ RMSE <- sqrt(sum((observed_los - predict_los)**2)/n_test)
 
 For this first model, RMSE = `r round(RMSE, 2)`.
 
-This model validation can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.
+This model validation step can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.
 
 ## Prediction of occupancy length for imaginary patients
+The following Table shows the basic characteristics of ten imaginary patients. The predictions given by the model on the number of days until the bed will be available, are found in the last column. 
+```{r}
+tab <- data.frame(GENDER = c("Female", "Male", "Male", "Male", "Female",
+                             "Male", "Female", "Female", "Female",  "Male"),
+                  AGE = c(49, 84, 76, 25, 71, 66, 34, 80, 91, 62),
+                  NB_SYMPTOMS = c(1, 6, 2, 4, 5, 5, 1, 3, 3, 6),
+                  NB_COMORB = c(1, 1, 1, 3, 0, 1, 2, 1, 1, 2))
 
-Table with outcome of some imaginary patients for pitch.
+prediction_imaginary <- predict(poisson_regression, newdata = tab, 
+                                type = "response") %>% 
+  round(2)
+
+tab <- cbind(tab, prediction_imaginary)
+colnames(tab)[5] <- "Prediction length-of-stay"
+kableExtra::kable(tab, 
+                  caption = "Ten imaginary patients, together with a prediction for their length-of-stay.") %>% 
+  kableExtra::kable_styling()
+```
+
 
 # Data-privacy issues to consider
 
-To ensure the data being pseudo-anonymised, meaning making it impossible, or very hard to identify patients, we can consider the following further steps:
+To ensure the data being pseudo-anonymised, meaning making it impossible, or very hard to identify patients, the following steps have to be considered:
 
-- Age-groups instead of exact age (<18, [18-29], [30-49], [50-64], [65-74], 75+)
+- The data stored by the platform and used in the model are ICU bed-specific and do not store sensible patient data. 
+- Age-groups instead of exact age (<18, [18-29], [30-49], [50-64], [65-74], 75+).
