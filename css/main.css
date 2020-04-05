@@ -11,17 +11,18 @@ a:hover {
 }
 h1 {
     font-size: 2.8em;
-    color:#46c3a4;
+    color:#12B7D9;
     font-family:'Helvetica'
 }
 
 a:link {
-    color:#666666;
+    color:#2B7ACA;
 }
+
 h2 {
     font-size: 2em;
     font-style: italic;
-    color:#46c3a4;
+    color:#12B7D9;
     font-family:'Helvetica'
 }
 p {
@@ -31,12 +32,6 @@ p {
     font-family:'Helvetica'
 }
 
-li {
-    font-size: 1.2em;
-    line-height: 1.3em;
-    color: #333;
-    font-family:'Helvetica'
-}
 footer {
     border-top: 1px solid #d5d5d5;
     font-size: .8em;
@@ -49,4 +44,5 @@ ul.posts {
 
 ul.posts li {
     list-style: none;
+    font-size: 1.5em;
 }

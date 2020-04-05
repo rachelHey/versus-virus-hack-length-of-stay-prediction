@@ -1,5 +1,5 @@
 ---
-title: "**Prediction of length-of-stay in an ICU bed**"
+title: "**Prediction of occupancy of an ICU bed**"
 output: 
   html_document:
     css: css/main.css
@@ -17,12 +17,14 @@ library(lubridate)
 library(MASS)
 ```
 
+<img src = "logo.png" alt="My Logo" style="float:right;width:150px;height:150;">
 
 # Background
-The <span style="color:#46c3a4">_**GreenBed**_</span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients in between cities or even cantons.
 
-# Data 
-The data used for the prediction of the length-of-stay will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the platform will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitive patient-data. The data collected by the platform will be the following:
+The <span style="color:#2B7ACA">_**BlueBeds**_</span> platform is supposed to provide information on the availability of ICU beds in Switzerland. At admission of a patient to the ICU, a member of the hospital staff will block the bed, the patient is put in. Further some baseline patient characteristics are provided to the platform. In a next step, using these patient characteristics together with some bed-level information and hospital-level data the platform predicts the length-of-stay of the patient and therefore a time window for which the bed will be occupied. This data will help with hospital resource management. As this platform can be accessed Swiss-wide and the data is anonymised, it further provides real-time information on availability of beds, which can help to reallocate patients in between cities or even cantons.
+
+# Data collection
+The data used for the prediction of the length-of-stay (of the patient in the bed) will be collected by the platform itself. The usage of historical data for the initial predictions can be considered, so that predictions can be furnished right from the start. Note that the data recorded by the platform will be admission-specific, and for the prediction we are interested in the bed itself, and not in the individual patient. This ensures that we are not working with actual sensitive patient-data. The data collected by the platform will be the following (the selection is based on a literature review):
 
 - unique identifier of the bed (`ID_BED`).
 - unique identifier of the hospital (`ID_HOSPITAL`)
@@ -34,6 +36,15 @@ The data used for the prediction of the length-of-stay will be collected by the 
 - co-morbidities or preconditions of the patient (`COMORB`). This can be a text input, with listed co-morbidities separated by commas, so that the model can either use a binary variable for presence of preconditions (`PRESENCE_COMORB`) or even the number of different preconditions (`NB_COMORB`). 
 - some Covid-19 related severity score as for example the [Brescia-COVID Respiratory Severity Scale](https://www.mdcalc.com/brescia-covid-respiratory-severity-scale-bcrss-algorithm)
 - Covid-19 related symptoms or simply again the number of symptoms (`NB_SYMPTOMS`)
+
+
+The hospital staff (doctor or nurse) interacts with the platform only twice: 
+
+1. To find a bed and admit the patient to this bed. At this stage the doctor or nurse, sets the bed to occupied, fills in the baseline characteristics of the patient. The demographics on the bed, hospital, etc are automatically recorded by the platform. Also the admission date is automatically filled in by the platform.
+
+2. When the patient is discharged from the bed. At this second stage, the doctor or nurse sets the bed to free and fills in the final stage of the patient (dead, alive, other).
+
+
 
 ```{r import-and-clean-up-data, warning= FALSE, message = FALSE}
 patients <- readxl::read_xlsx(path = "data/TRAINING_DURATION_OF_STAY.xlsx") %>% 
@@ -51,20 +62,7 @@ n_sample <- nrow(patients)
 #                   patients)
 ```
 
-## Predictors
-
-After a literature review the following potential predictors were retrieved:
-
-- tba 
-- tba
-
-
-## Mock data structure explained
-
-Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
-XXXXX
-
-# Training and Testing
+# Training and testing of the model
 
 To evaluate the models and in the long-term maybe send alerts when the model is not performing anymore, the data is split into a train and a testing sample. The training data is composed of 75% of the sample. Note that in the long term this should be changed to cross-validation (*e.g* splitting the data several times).
 
@@ -77,7 +75,6 @@ test_patients <- patients[-train_rows, ]
 n_train <- nrow(train_patients)
 n_test <- nrow(test_patients)
 ```
-
 
 # Description of potential models
 Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at ($e.g$ machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient
@@ -107,7 +104,16 @@ More non-parametric models should be looked at, once more data has been collecte
 ## Further modelling strategies
 An ad-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated _time-to-event models_ after the data on the end-state of the patients at the time of 'leaving' the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease. 
 
-# Model performance and variable selection on the mock-data
+# Model building, performance testing and variable selection on the mock-data
+
+## Mock data structure explained
+
+Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
+XXXXX
+
+## Model building
+
+## Model testing
 
 To compare the model performances, let us use the root-mean-square error (RMSE). The RMSE is commonly used to measure differences between values predicted by a model and the values observed, where a lower score implies better accuracy. 
 
