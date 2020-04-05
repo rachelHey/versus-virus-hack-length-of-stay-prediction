@@ -4,7 +4,13 @@ The goal of this [project](https://devpost.com/software/bluebed/) (part of the v
 
 ## BlueBeds Platform
 
-Out proposed solution is the BlueBeds Platform for which the code for a prototype can be found [here](https://github.com/gpietro/hackathon-versusvirus-backend) and [here](https://github.com/gpietro/hackathon-versusvirus-client). The platform is the end-product, which collects data on the hospital-level and patient-level, and gives real-time predictions on the length-od-stay of the patient in that same bed. This will help with hospital-management. A description on how the data could be collected on the platform and how this data can be used in rather easy and straightforward prediction models can be found [here](https://rachelhey.github.io/versus-virus-hack-length-of-stay-prediction/).
+Ou proposed solution is the BlueBeds Platform for which the code for which a [Demo-version](https://versus-virus.herokuapp.com/) is available (also check-out the [github-repo](https://github.com/gpietro/hackathon-versusvirus-client)). The platform is the end-product, which collects data on the hospital-level and patient-level, and gives real-time predictions on the length-od-stay of the patient in that same bed. This will help with hospital-management. A description on how the data could be collected on the platform and how this data can be used in rather easy and straightforward prediction models can be found [here](https://rachelhey.github.io/versus-virus-hack-length-of-stay-prediction/).
+
+# Prediction models
+
+- A first very basic prediction model build with `R`, can be found at the end of [this document](https://rachelhey.github.io/versus-virus-hack-length-of-stay-prediction/).
+
+- An alternative model build in `Python` can be found [here](https://github.com/rachelHey/versus-virus-hack-length-of-stay-prediction/blob/master/python-version/Bed_Forecasting_Model_Training.ipynb).
 
 ## Data generation setup
 
@@ -26,9 +32,3 @@ To better illustrate the models, mock-data was generated as follows:
 
 Please note that not all assumptions have been available prior generation of the data and some might deviate from the underlying literature. Conditional occurrence of medical preconditions and gender biases were not included in this first version. 
 
-
-# Prediction models
-
-- A first very basic prediction model build with R, can be found at the end of [this document](https://rachelhey.github.io/versus-virus-hack-length-of-stay-prediction/).
-
-- An alternative model build in `Python` can be found [here](https://github.com/rachelHey/versus-virus-hack-length-of-stay-prediction/blob/master/python-version/Bed_Forecasting_Model_Training.ipynb).
