@@ -188,6 +188,66 @@ window.buildTabsets = function(tocID) {
 };
 
 </script>
+<script>
+window.initializeCodeFolding = function(show) {
+
+  // handlers for show-all and hide all
+  $("#rmd-show-all-code").click(function() {
+    $('div.r-code-collapse').each(function() {
+      $(this).collapse('show');
+    });
+  });
+  $("#rmd-hide-all-code").click(function() {
+    $('div.r-code-collapse').each(function() {
+      $(this).collapse('hide');
+    });
+  });
+
+  // index for unique code element ids
+  var currentIndex = 1;
+
+  // select all R code blocks
+  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia');
+  rCodeBlocks.each(function() {
+
+    // create a collapsable div to wrap the code in
+    var div = $('<div class="collapse r-code-collapse"></div>');
+    if (show || $(this)[0].classList.contains('fold-show'))
+      div.addClass('in');
+    var id = 'rcode-643E0F36' + currentIndex++;
+    div.attr('id', id);
+    $(this).before(div);
+    $(this).detach().appendTo(div);
+
+    // add a show code button right above
+    var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+    var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+    showCodeButton.append(showCodeText);
+    showCodeButton
+        .attr('data-toggle', 'collapse')
+        .attr('data-target', '#' + id)
+        .attr('aria-expanded', show)
+        .attr('aria-controls', id);
+
+    var buttonRow = $('<div class="row"></div>');
+    var buttonCol = $('<div class="col-md-12"></div>');
+
+    buttonCol.append(showCodeButton);
+    buttonRow.append(buttonCol);
+
+    div.before(buttonRow);
+
+    // update state of button on show/hide
+    div.on('hidden.bs.collapse', function () {
+      showCodeText.text('Code');
+    });
+    div.on('show.bs.collapse', function () {
+      showCodeText.text('Hide');
+    });
+  });
+
+}
+</script>
 <style type="text/css">.hljs-literal {
 color: #990073;
 }
@@ -273,9 +333,9 @@ a:link {
 color:#2B7ACA;
 }
 h2 {
-font-size: 2em;
+font-size: 1.5em;
 font-style: italic;
-color:#12B7D9;
+color:#2B7ACA;
 font-family:'Helvetica'
 }
 p {
@@ -288,11 +348,11 @@ footer {
 border-top: 1px solid #d5d5d5;
 font-size: .8em;
 }
-ul.posts { margin: 20px auto 40px; font-size: 1.5em;
+ul li {
+font-size: 1.2em;
 }
-ul.posts li {
-list-style: none;
-font-size: 1.5em;
+ol li {
+font-size: .95em;
 }</style>
 
 
@@ -384,6 +444,9 @@ summary {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -399,6 +462,14 @@ summary {
 
 
 <div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
 
@@ -435,7 +506,35 @@ summary {
 </div>
 <div id="training-and-testing-of-the-model" class="section level1">
 <h1>Training and testing of the model</h1>
-<p>To evaluate the models and in the long-term maybe send alerts when the model is not performing anymore, the data is split into a train and a testing sample. The training data is composed of 75% of the sample. Note that in the long term this should be changed to cross-validation (<em>e.g</em> splitting the data several times).</p>
+<p>To evaluate the model and, in the long-term, send alerts if the model is under-performing, it is important to schedule reguare tests. Everytime a new patient is discharged from a bed, the complete record of the ICU bed is added to the data base. Next, the prediction model is updated using the new data point(s). Is is extremely important to alwayse split the available data into training and testing data; train the model on one part and test it on the remaining. Different approaches can be followed here (<span class="math inline">\(e.g.\)</span> K-fold cross-validation or bootstrap cross-validation).</p>
+</div>
+<div id="description-of-potential-models" class="section level1">
+<h1>Description of potential models</h1>
+<p>Once the platform is running, data is collected and lessons have been learned, more sophisticated models can be looked at (<span class="math inline">\(e.g\)</span> machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient</p>
+<div id="simple-poisson-regression-model" class="section level2">
+<h2>Simple Poisson regression model</h2>
+<p>Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem. The most-commonly used method for such data is the <a href="https://en.wikipedia.org/wiki/Poisson_regression">Poisson regression</a>.</p>
+</div>
+<div id="negative-binomial-regression-model" class="section level2">
+<h2>Negative-binomial regression model</h2>
+<p>An alternative to Poisson regression are <a href="https://en.wikipedia.org/wiki/Negative_binomial_distribution">negative-binomial models</a>. These are generalisation of the Poisson model, loosening some of the underlying assumptions of the latter.</p>
+</div>
+<div id="tree-based-solutions" class="section level2">
+<h2>Tree-based solutions</h2>
+<p>Non-parametric models can be looked at, once more data has been collected; for example models based on descision trees or machine learning in general.</p>
+</div>
+<div id="further-modelling-strategies" class="section level2">
+<h2>Further modelling strategies</h2>
+<p>An add-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated <em>time-to-event models</em> after the data on the end-state of the patients at the time of discharge of the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease.</p>
+</div>
+</div>
+<div id="model-building-performance-testing-and-variable-selection-on-the-mock-data" class="section level1">
+<h1>Model building, performance testing and variable selection on the mock-data</h1>
+<p>To better illustrate the usage of the prediction model, a mock data set has been simulated, which can be downloaded <a href="https://github.com/rachelHey/versus-virus-hack-length-of-stay-prediction/blob/master/data/TRAINING_DURATION_OF_STAY.xlsx">here</a>. The data has 9’773 rows with information on hospital admissions. To build the data, and make it as realistic as possible, several sources with information on Covid-19 patients were used. For the clinical characteristics, their symtoms, etc, this <a href="https://jamanetwork.com/journals/jama/fullarticle/2761044">JAMA paper</a> was a good source, especially <a href="ttps://cdn.jamanetwork.com/ama/content_public/journal/jama/938419/joi200019t1.png?Expires=2147483647&amp;Signature=qAtakdiLVahD-1x8zl9gyZ07WD6M2lmSQPs3vG60dc6K4y5cxTDa7DbNrqO1biI2uiwC0fnIOrfzLhh4P5q3-IYGOi5jFp5Scj6PYS9xYiFc-HHDuWeq~imiMQnhGhKytxqPRYwat9uywS43a7SbSSj88DJgSNZcp2yq5GePiC6HVPAImWsVtSg5X7xNZirkp9gstf4doM54DkODLhAz86gjCInulisjJyYhFZxEv~6bvxYFxH3ARUPCktCA~voJHwD~jFbNfJLymecdjNFjzzRQqUs25~OnNuxq7xMm3FPuz3bqJG~1Z8-9K1QgomEx6EeEJHmV9kDNI3Dv8nRqDw__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA">Table 1</a>.</p>
+<p>The illustrative model will include the following variables: the age of the patient, their gender, the number of Covid-19 related symptoms and the number of comorbidities.</p>
+<div id="model-building" class="section level2">
+<h2>Model building</h2>
+<p>To build the prediction model, 75% of the data is used as training sample, as is illustrated in the following <code>R</code>-code chunk:</p>
 <pre class="r"><code># Split into train and test
 set.seed(1)
 train_rows &lt;- sample(1:n_sample, size = .75*n_sample)
@@ -443,54 +542,30 @@ train_patients &lt;- patients[train_rows, ]
 test_patients &lt;- patients[-train_rows, ]
 n_train &lt;- nrow(train_patients)
 n_test &lt;- nrow(test_patients)</code></pre>
-</div>
-<div id="description-of-potential-models" class="section level1">
-<h1>Description of potential models</h1>
-<p>Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at (<span class="math inline">\(e.g\)</span> machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient</p>
-<div id="simple-poisson-regression-model" class="section level2">
-<h2>Simple Poisson regression model</h2>
-<p>Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem.</p>
+<p>Then, the actual poisson regression model is fitted on this training data:</p>
 <pre class="r"><code>poisson_regression &lt;- 
   glm(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
       family = &quot;poisson&quot;,data = train_patients)</code></pre>
-</div>
-<div id="negative-binomial-regression-model" class="section level2">
-<h2>Negative-binomial regression model</h2>
-<p>An alternative to poisson regression are negative-binomial models.</p>
+<p>Alternatively, a negative binomial regression model is fitted:</p>
 <pre class="r"><code>negbin_regression &lt;- 
   glm.nb(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
          data = train_patients)</code></pre>
 </div>
-<div id="tree-based-solutions" class="section level2">
-<h2>Tree-based solutions</h2>
-<p>More non-parametric models should be looked at, once more data has been collected.</p>
-</div>
-<div id="further-modelling-strategies" class="section level2">
-<h2>Further modelling strategies</h2>
-<p>An ad-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated <em>time-to-event models</em> after the data on the end-state of the patients at the time of ‘leaving’ the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease.</p>
-</div>
-</div>
-<div id="model-building-performance-testing-and-variable-selection-on-the-mock-data" class="section level1">
-<h1>Model building, performance testing and variable selection on the mock-data</h1>
-<div id="mock-data-structure-explained" class="section level2">
-<h2>Mock data structure explained</h2>
-<p>Python was used to build a synthetic data set. The sample size is 9’773. XXXXX</p>
-</div>
-<div id="model-building" class="section level2">
-<h2>Model building</h2>
-</div>
 <div id="model-testing" class="section level2">
 <h2>Model testing</h2>
-<p>To compare the model performances, let us use the root-mean-square error (RMSE). The RMSE is commonly used to measure differences between values predicted by a model and the values observed, where a lower score implies better accuracy.</p>
-<p>This model validation can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.</p>
+<p>To compare the model performances, we will use the <a href="https://en.wikipedia.org/wiki/Root-mean-square_deviation">root-mean-square error</a> (RMSE), for symplicity. The RMSE is commonly used to measure differences between values predicted by a model and the values observed, where a lower score implies better accuracy.</p>
 <p>Let’s see how well that first poisson model performs:</p>
 <pre class="r"><code>predict_los &lt;- predict(poisson_regression, newdata = test_patients,
                        type = &quot;response&quot;)
 observed_los &lt;- test_patients$LENGTH_OF_STAY
 
-RMSE &lt;- sqrt(sum((observed_los - predict_los)**2)/n_test)
-RMSE</code></pre>
-<pre><code>## [1] 2.543795</code></pre>
+RMSE &lt;- sqrt(sum((observed_los - predict_los)**2)/n_test)</code></pre>
+<p>For this first model, RMSE = 2.54.</p>
+<p>This model validation can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.</p>
+</div>
+<div id="prediction-of-occupancy-length-for-imaginary-patients" class="section level2">
+<h2>Prediction of occupancy length for imaginary patients</h2>
+<p>Table with outcome of some imaginary patients for pitch.</p>
 </div>
 </div>
 <div id="data-privacy-issues-to-consider" class="section level1">
@@ -534,6 +609,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

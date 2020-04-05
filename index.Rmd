@@ -2,6 +2,7 @@
 title: "**Prediction of occupancy of an ICU bed**"
 output: 
   html_document:
+    code_folding: show
     css: css/main.css
 ---
 
@@ -45,7 +46,6 @@ The hospital staff (doctor or nurse) interacts with the platform only twice:
 2. When the patient is discharged from the bed. At this second stage, the doctor or nurse sets the bed to free and fills in the final stage of the patient (dead, alive, other).
 
 
-
 ```{r import-and-clean-up-data, warning= FALSE, message = FALSE}
 patients <- readxl::read_xlsx(path = "data/TRAINING_DURATION_OF_STAY.xlsx") %>% 
   rename(PATIENT_ID = "...1",
@@ -64,8 +64,30 @@ n_sample <- nrow(patients)
 
 # Training and testing of the model
 
-To evaluate the models and in the long-term maybe send alerts when the model is not performing anymore, the data is split into a train and a testing sample. The training data is composed of 75% of the sample. Note that in the long term this should be changed to cross-validation (*e.g* splitting the data several times).
+To evaluate the model and, in the long-term, send alerts if the model is under-performing, it is important to schedule reguare tests. Everytime a new patient is discharged from a bed, the complete record of the ICU bed is added to the data base. Next, the prediction model is updated using the new data point(s). Is is extremely important to alwayse split the available data into training and testing data; train the model on one part and test it on the remaining. Different approaches can be followed here ($e.g.$ K-fold cross-validation or bootstrap cross-validation).
 
+# Description of potential models
+Once the platform is running, data is collected and lessons have been learned, more sophisticated models can be looked at ($e.g$ machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient
+
+## Simple Poisson regression model 
+Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem. The most-commonly used method for such data is the [Poisson regression](https://en.wikipedia.org/wiki/Poisson_regression).
+
+## Negative-binomial regression model
+An alternative to Poisson regression are [negative-binomial models](https://en.wikipedia.org/wiki/Negative_binomial_distribution). These are generalisation of the Poisson model, loosening some of the underlying assumptions of the latter. 
+
+## Tree-based solutions
+Non-parametric models can be looked at, once more data has been collected; for example models based on descision trees or machine learning in general.
+
+## Further modelling strategies
+An add-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated _time-to-event models_ after the data on the end-state of the patients at the time of discharge of the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease. 
+
+# Model building, performance testing and variable selection on the mock-data
+To better illustrate the usage of the prediction model, a mock data set has been simulated, which can be downloaded [here](https://github.com/rachelHey/versus-virus-hack-length-of-stay-prediction/blob/master/data/TRAINING_DURATION_OF_STAY.xlsx). The data has `r prettyNum(n_sample, big.mark="'")` rows with information on hospital admissions. To build the data, and make it as realistic as possible, several sources with information on Covid-19 patients were used. For the clinical characteristics, their symtoms, etc, this [JAMA paper](https://jamanetwork.com/journals/jama/fullarticle/2761044) was a good source, especially [Table 1](ttps://cdn.jamanetwork.com/ama/content_public/journal/jama/938419/joi200019t1.png?Expires=2147483647&Signature=qAtakdiLVahD-1x8zl9gyZ07WD6M2lmSQPs3vG60dc6K4y5cxTDa7DbNrqO1biI2uiwC0fnIOrfzLhh4P5q3-IYGOi5jFp5Scj6PYS9xYiFc-HHDuWeq~imiMQnhGhKytxqPRYwat9uywS43a7SbSSj88DJgSNZcp2yq5GePiC6HVPAImWsVtSg5X7xNZirkp9gstf4doM54DkODLhAz86gjCInulisjJyYhFZxEv~6bvxYFxH3ARUPCktCA~voJHwD~jFbNfJLymecdjNFjzzRQqUs25~OnNuxq7xMm3FPuz3bqJG~1Z8-9K1QgomEx6EeEJHmV9kDNI3Dv8nRqDw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA).
+
+The illustrative model will include the following variables: the age of the patient, their gender, the number of Covid-19 related symptoms and the number of comorbidities.
+
+## Model building
+To build the prediction model, 75% of the data is used as training sample, as is illustrated in the following `R`-code chunk:
 ```{r, echo = TRUE}
 # Split into train and test
 set.seed(1)
@@ -76,48 +98,24 @@ n_train <- nrow(train_patients)
 n_test <- nrow(test_patients)
 ```
 
-# Description of potential models
-Once the product is running, data is collected and lessons have been learned, more sophisticated models can be looked at ($e.g$ machine learning). For the time-being and for a first prototype simple parametric regression models should be sufficient
-
-## Simple Poisson regression model 
-Since we want to predict the number of days a patient stays in the bed, this can be resolved with a simple count-data problem.
+Then, the actual poisson regression model is fitted on this training data:
 ```{r poisson-model-training, echo = TRUE}
 poisson_regression <- 
   glm(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
       family = "poisson",data = train_patients)
 ```
 
-
-## Negative-binomial regression model
-An alternative to poisson regression are negative-binomial models.
-
+Alternatively, a negative binomial regression model is fitted: 
 ```{r negbin-model-training, echo = TRUE, warning=FALSE}
 negbin_regression <- 
   glm.nb(LENGTH_OF_STAY ~ GENDER + AGE + NB_SYMPTOMS + NB_COMORB,
          data = train_patients)
 ```
 
-## Tree-based solutions
-
-More non-parametric models should be looked at, once more data has been collected.
-
-## Further modelling strategies
-An ad-on output of the platform can be the prediction of the not only the time the patient leaves the bed, but further the chances of leaving the bed alive. This can be done using more sophisticated _time-to-event models_ after the data on the end-state of the patients at the time of 'leaving' the ICU bed is retrieved. As such, the platform can be seen as additional source for robust data collection to better understand the course of the disease. 
-
-# Model building, performance testing and variable selection on the mock-data
-
-## Mock data structure explained
-
-Python was used to build a synthetic data set. The sample size is `r prettyNum(n_sample, big.mark="'")`. 
-XXXXX
-
-## Model building
 
 ## Model testing
 
-To compare the model performances, let us use the root-mean-square error (RMSE). The RMSE is commonly used to measure differences between values predicted by a model and the values observed, where a lower score implies better accuracy. 
-
-This model validation can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.
+To compare the model performances, we will use the [root-mean-square error](https://en.wikipedia.org/wiki/Root-mean-square_deviation) (RMSE), for symplicity. The RMSE is commonly used to measure differences between values predicted by a model and the values observed, where a lower score implies better accuracy. 
 
 Let's see how well that first poisson model performs:
 ```{r poisson-model-testing, echo = TRUE}
@@ -126,9 +124,15 @@ predict_los <- predict(poisson_regression, newdata = test_patients,
 observed_los <- test_patients$LENGTH_OF_STAY
 
 RMSE <- sqrt(sum((observed_los - predict_los)**2)/n_test)
-RMSE
 ```
 
+For this first model, RMSE = `r round(RMSE, 2)`.
+
+This model validation can also be used to update the models, add or drop variables, by judging whether they have had any predictive power.
+
+## Prediction of occupancy length for imaginary patients
+
+Table with outcome of some imaginary patients for pitch.
 
 # Data-privacy issues to consider
 

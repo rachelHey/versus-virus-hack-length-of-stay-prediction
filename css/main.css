@@ -20,9 +20,9 @@ a:link {
 }
 
 h2 {
-    font-size: 2em;
+    font-size: 1.5em;
     font-style: italic;
-    color:#12B7D9;
+    color:#2B7ACA;
     font-family:'Helvetica'
 }
 p {
@@ -37,12 +37,10 @@ footer {
     font-size: .8em;
 }
 
-ul.posts { 
-    margin: 20px auto 40px; 
-    font-size: 1.5em;
+ul li {
+    font-size: 1.2em;
 }
 
-ul.posts li {
-    list-style: none;
-    font-size: 1.5em;
+ol li {
+    font-size: .95em;
 }
