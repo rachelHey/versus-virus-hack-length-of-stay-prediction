@@ -18,7 +18,7 @@ To better illustrate the models, mock-data was generated as follows:
 
 4) Sample data according to volume of ICU beds available in Swiss hospitals
 
-5) Sample admission type : ICU invasive, ICU non-invasive, Non-ICU [source](https://www.cdc.gov/coronavirus/2019-ncov/hcp/clinical-guidance-management-patients.html)
+5) Sample admission type : ICU invasive, ICU non-invasive, Non-ICU ([source](https://www.cdc.gov/coronavirus/2019-ncov/hcp/clinical-guidance-management-patients.html))
 
 6) Augment data with patient information about symptoms & preconditions and sample according to [frequency of occurrence](https://jamanetwork.com/journals/jama/fullarticle/2761044)
 
